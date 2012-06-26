@@ -1,0 +1,21 @@
+.calendartravel,
+.fc-agenda .calendartravel .fc-event-time,
+.calendartravel a {
+    background-color: green; /* background color */
+    border-color: green;     /* border color */
+    color: yellow;           /* text color */
+    }
+.calendarlodging,
+.fc-agenda .calendarlodging .fc-event-time,
+.calendarlodging a {
+    background-color: red; /* background color */
+    border-color: red;     /* border color */
+    color: yellow;           /* text color */
+    }
+.calendarevent,
+.fc-agenda .calendarevent .fc-event-time,
+.calendarevent a {
+    background-color: blue; /* background color */
+    border-color: blue;     /* border color */
+    color: pink;           /* text color */
+    }

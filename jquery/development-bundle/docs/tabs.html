@@ -1,0 +1,891 @@
+
+<ul class="UIAPIPlugin-toc">
+<li><a href="#overview">Overview</a></li>
+<li><a href="#options">Options</a></li>
+<li><a href="#events">Events</a></li>
+<li><a href="#methods">Methods</a></li>
+<li><a href="#theming">Theming</a></li>
+</ul>
+<div class="UIAPIPlugin">
+  <h1>jQuery UI Tabs</h1>
+  <div id="overview">
+    <h2 class="top-header">Overview</h2>
+    <div id="overview-main">
+        <p>Tabs are generally used to break content into multiple sections that can be swapped to save space, much like an accordion.</p>
+<p>By default a tab widget will swap between tabbed sections onClick, but the events can be changed to onHover through an option. Tab content can be loaded via Ajax by setting an href on a tab.</p>
+<p><em>NOTE: Tabs created dynamically using .tabs( "add", ... ) are given an id of ui-tabs-NUM, where NUM is an auto-incrementing id. If you use this naming convention for your own elements, you may encounter problems.</em></p>
+<table id="toc" class="toc" summary="Contents"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1"><a href="#Events"><span class="tocnumber">1</span> <span class="toctext">Events</span></a></li>
+<li class="toclevel-1"><a href="#Ajax_mode"><span class="tocnumber">2</span> <span class="toctext">Ajax mode</span></a>
+<ul>
+<li class="toclevel-2"><a href="#Back_button_and_bookmarking"><span class="tocnumber">2.1</span> <span class="toctext">Back button and bookmarking</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1"><a href="#How_to..."><span class="tocnumber">3</span> <span class="toctext">How to...</span></a>
+<ul>
+<li class="toclevel-2"><a href="#...retrieve_the_index_of_the_currently_selected_tab"><span class="tocnumber">3.1</span> <span class="toctext">...retrieve the index of the currently selected tab</span></a></li>
+<li class="toclevel-2"><a href="#...open_links_in_the_current_tab_instead_of_leaving_the_page"><span class="tocnumber">3.2</span> <span class="toctext">...open links in the current tab instead of leaving the page</span></a></li>
+<li class="toclevel-2"><a href="#...select_a_tab_from_a_text_link_instead_of_clicking_a_tab_itself"><span class="tocnumber">3.3</span> <span class="toctext">...select a tab from a text link instead of clicking a tab itself</span></a></li>
+<li class="toclevel-2"><a href="#...prevent_switching_to_the_tab_on_click_depending_on_form_validation"><span class="tocnumber">3.4</span> <span class="toctext">...prevent switching to the tab on click depending on form validation</span></a></li>
+<li class="toclevel-2"><a href="#...immediately_select_a_just_added_tab"><span class="tocnumber">3.5</span> <span class="toctext">...immediately select a just added tab</span></a></li>
+<li class="toclevel-2"><a href="#...follow_a_tab.27s_URL_instead_of_loading_its_content_via_ajax"><span class="tocnumber">3.6</span> <span class="toctext">...follow a tab's URL instead of loading its content via ajax</span></a></li>
+<li class="toclevel-2"><a href="#...prevent_a_FOUC_.28Flash_of_Unstyled_Content.29_before_tabs_are_initialized"><span class="tocnumber">3.7</span> <span class="toctext">...prevent a FOUC (Flash of Unstyled Content) before tabs are initialized</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1"><a href="#Why_does..."><span class="tocnumber">4</span> <span class="toctext">Why does...</span></a>
+<ul>
+<li class="toclevel-2"><a href="#...my_slider.2C_Google_Map.2C_sIFR_etc._not_work_when_placed_in_a_hidden_.28inactive.29_tab.3F"><span class="tocnumber">4.1</span> <span class="toctext">...my slider, Google Map, sIFR etc. not work when placed in a hidden (inactive) tab?</span></a></li>
+</ul>
+</li>
+</ul>
+</td></tr></table><script type="text/javascript"> if (window.showTocToggle) { var tocShowText = "show"; var tocHideText = "hide"; showTocToggle(); } </script>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=1" title="Template:UIAPIPlugin">edit</a>]</div><a name="Events"></a><h2>Events</h2>
+<p>A series of events fire when interacting with a tabs interface:
+</p>
+<ul><li> tabsselect, tabsload, tabsshow (in that order)
+</li><li> tabsadd, tabsremove
+</li><li> tabsenable, tabsdisable
+</li></ul>
+<p>Event binding example:
+</p>
+<pre>$('#example').bind('tabsselect', function(event, ui) {
+
+    // Objects available in the function context:
+    ui.tab     // anchor element of the selected (clicked) tab
+    ui.panel   // element, that contains the selected/clicked tab contents
+    ui.index   // zero-based index of the selected (clicked) tab
+
+});</pre>
+<p>Note that if a handler for the tabsselect event returns false, the clicked tab will not become selected (useful for example if switching to the next tab requires a form validation).
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=2" title="Template:UIAPIPlugin">edit</a>]</div><a name="Ajax_mode"></a><h2> Ajax mode </h2>
+<p>Tabs supports loading tab content via Ajax in an unobtrusive manner.
+</p><p>The HTML you need is slightly different from the one that is used for static tabs: A list of links pointing to existing resources (from where the content gets loaded) and no additional containers at all (unobtrusive!). The containers' markup is going to be created on the fly:
+</p>
+<pre>
+&lt;div id=&quot;example&quot;&gt;
+     &lt;ul&gt;
+         &lt;li&gt;&lt;a href=&quot;ahah_1.html&quot;&gt;&lt;span&gt;Content 1&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+         &lt;li&gt;&lt;a href=&quot;ahah_2.html&quot;&gt;&lt;span&gt;Content 2&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+         &lt;li&gt;&lt;a href=&quot;ahah_3.html&quot;&gt;&lt;span&gt;Content 3&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+     &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+<p>Obviously this degrades gracefully - the links, e.g. the content, will still be accessible with JavaScript disabled.
+</p><p>Note that if you wish to reuse an existing container, you
+could do so by matching a title attribute and the container's id:
+</p>
+<pre>
+&lt;li&gt;&lt;a href=&quot;hello/world.html&quot; title=&quot;Todo Overview&quot;&gt; ... &lt;/a&gt;&lt;/li&gt;
+</pre>
+<p>and a container like:
+</p>
+<pre>
+&lt;div id=&quot;Todo_Overview&quot;&gt; ... &lt;/div&gt;
+</pre>
+<p>(Note how white space is replaced with an underscore)
+</p><p>This is useful if you want a human readable hash in the URL instead of
+a cryptic generated one.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=3" title="Template:UIAPIPlugin">edit</a>]</div><a name="Back_button_and_bookmarking"></a><h3>Back button and bookmarking</h3>
+<p>Tabs 2 already supported this functionality, although the history plugin needs a rewrite first (it doesn't support Safari 3 and is in general a little inflexible) before it can be build back into the tabs. It is planned and Klaus is working on it whenever he finds the time. Actual bugs in the UI Tabs plugin itself always have higher priority though.
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=4" title="Template:UIAPIPlugin">edit</a>]</div><a name="How_to..."></a><h2>How to...</h2>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=5" title="Template:UIAPIPlugin">edit</a>]</div><a name="...retrieve_the_index_of_the_currently_selected_tab"></a><h3>...retrieve the index of the currently selected tab</h3>
+<pre>var $tabs = $('#example').tabs();
+var selected = $tabs.tabs('option', 'selected'); // =&gt; 0</pre>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=6" title="Template:UIAPIPlugin">edit</a>]</div><a name="...open_links_in_the_current_tab_instead_of_leaving_the_page"></a><h3>...open links in the current tab instead of leaving the page</h3>
+<p>"Hijax" links after tab content has been loaded:
+</p>
+<pre>$('#example').tabs({
+    load: function(event, ui) {
+        $('a', ui.panel).click(function() {
+            $(ui.panel).load(this.href);
+            return false;
+        });
+    }
+});</pre>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=7" title="Template:UIAPIPlugin">edit</a>]</div><a name="...select_a_tab_from_a_text_link_instead_of_clicking_a_tab_itself"></a><h3>...select a tab from a text link instead of clicking a tab itself</h3>
+<pre>var $tabs = $('#example').tabs(); // first tab selected
+
+$('#my-text-link').click(function() { // bind click event to link
+    $tabs.tabs('select', 2); // switch to third tab
+    return false;
+});</pre>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=8" title="Template:UIAPIPlugin">edit</a>]</div><a name="...prevent_switching_to_the_tab_on_click_depending_on_form_validation"></a><h3>...prevent switching to the tab on click depending on form validation</h3>
+<p>Returning false in the tabs select handler prevents the clicked tab from becoming selected.
+</p>
+<pre>$('#example').tabs({
+    select: function(event, ui) {
+        var isValid = ... // form validation returning true or false
+        return isValid;
+    }
+});</pre>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=9" title="Template:UIAPIPlugin">edit</a>]</div><a name="...immediately_select_a_just_added_tab"></a><h3>...immediately select a just added tab</h3>
+<pre>var $tabs = $('#example').tabs({
+    add: function(event, ui) {
+        $tabs.tabs('select', '#' + ui.panel.id);
+    }
+});</pre>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=10" title="Template:UIAPIPlugin">edit</a>]</div><a name="...follow_a_tab.27s_URL_instead_of_loading_its_content_via_ajax"></a><h3>...follow a tab's URL instead of loading its content via ajax</h3>
+<p>Note that opening a tab in a new window is unexpected, e.g.
+inconsistent behaviour exposing a usablity problem (<a href="http://www.useit.com/alertbox/tabs.html" class="external free" title="http://www.useit.com/alertbox/tabs.html">http://www.useit.com/alertbox/tabs.html</a>).
+</p>
+<pre>$('#example').tabs({
+    select: function(event, ui) {
+        var url = $.data(ui.tab, 'load.tabs');
+        if( url ) {
+            location.href = url;
+            return false;
+        }
+        return true;
+    }
+});</pre>
+<p><br />
+</p>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=11" title="Template:UIAPIPlugin">edit</a>]</div><a name="...prevent_a_FOUC_.28Flash_of_Unstyled_Content.29_before_tabs_are_initialized"></a><h3>...prevent a FOUC (Flash of Unstyled Content) before tabs are initialized</h3>
+<p>Add the necessary classes to hide an inactive tab panel to the HTML right away - note that this will <b>not</b> degrade gracefully with JavaScript being disabled:
+</p>
+<pre>&lt;div id=&quot;example&quot; class=&quot;ui-tabs&quot;&gt;
+  ...
+  &lt;div id=&quot;a-tab-panel&quot; class=&quot;ui-tabs-hide&quot;&gt; &lt;/div&gt;
+  ...
+&lt;/div&gt;</pre>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=12" title="Template:UIAPIPlugin">edit</a>]</div><a name="Why_does..."></a><h2>Why does...</h2>
+<div class="editsection" style="float:right;margin-left:5px;">[<a href="http://docs.jquery.com/action/edit/Template:UIAPIPlugin?section=13" title="Template:UIAPIPlugin">edit</a>]</div><a name="...my_slider.2C_Google_Map.2C_sIFR_etc._not_work_when_placed_in_a_hidden_.28inactive.29_tab.3F"></a><h3>...my slider, Google Map, sIFR etc. not work when placed in a hidden (inactive) tab?</h3>
+<p>Any component that requires some dimensional computation for its initialization won't work in a hidden tab, because the tab panel itself is hidden via <code>display: none</code> so that any elements inside won't report their actual width and height (0 in most browsers).
+</p><p>There's an easy workaround. Use the <em>off-left technique</em> for hiding inactive tab panels. E.g. in your style sheet replace the rule for the class selector ".ui-tabs .ui-tabs-hide" with
+</p>
+<pre>.ui-tabs .ui-tabs-hide {
+    position: absolute;
+    left: -10000px;
+}</pre>
+<p>For Google maps you can also resize the map once the tab is displayed like this:
+</p>
+<pre>$('#example').bind('tabsshow', function(event, ui) {
+    if (ui.panel.id == &quot;map-tab&quot;) {
+        resizeMap();
+    }
+});</pre>
+resizeMap() will call Google Maps' checkResize() on the particular map.
+    </div>
+    <div id="overview-dependencies">
+        <h3>Dependencies</h3>
+        <ul>
+<li>UI Core</li>
+<li>To use the cookie option: <a href="http://plugins.jquery.com/project/cookie" class="external text" title="http://plugins.jquery.com/project/cookie">jquery.cookie.js</a></li>
+<li>Required CSS:
+<pre>.ui-tabs .ui-tabs-hide {
+     display: none;
+}</pre></li>
+</ul>
+    </div>
+    <div id="overview-example">
+        <h3>Example</h3>
+        <div id="overview-example" class="example">
+<ul><li><a href="#demo"><span>Demo</span></a></li><li><a href="#source"><span>View Source</span></a></li></ul>
+<p><div id="demo" class="tabs-container" rel="295">
+A simple jQuery UI Tabs.<br />
+</p>
+<pre>$(&quot;#tabs&quot;).tabs();
+</pre>
+<p></div><div id="source" class="tabs-container">
+</p>
+<pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;link href=&quot;http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;/&gt;
+  &lt;script src=&quot;http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js&quot;&gt;&lt;/script&gt;
+  &lt;script src=&quot;http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js&quot;&gt;&lt;/script&gt;
+  
+  &lt;script&gt;
+  $(document).ready(function() {
+    $(&quot;#tabs&quot;).tabs();
+  });
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body style="font-size:62.5%;"&gt;
+  
+&lt;div id=&quot;tabs&quot;&gt;
+    &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&quot;#fragment-1&quot;&gt;&lt;span&gt;One&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;#fragment-2&quot;&gt;&lt;span&gt;Two&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&quot;#fragment-3&quot;&gt;&lt;span&gt;Three&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;div id=&quot;fragment-1&quot;&gt;
+        &lt;p&gt;First tab is active by default:&lt;/p&gt;
+        &lt;pre&gt;&lt;code&gt;$('#example').tabs();&lt;/code&gt;&lt;/pre&gt;
+    &lt;/div&gt;
+    &lt;div id=&quot;fragment-2&quot;&gt;
+        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+    &lt;/div&gt;
+    &lt;div id=&quot;fragment-3&quot;&gt;
+        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p></div>
+</p><p></div>
+    </div>
+  </div>
+  <div id="options">
+    <h2 class="top-header">Options</h2>
+    <ul class="options-list">
+      
+<li class="option" id="option-disabled">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-disabled">disabled</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">Boolean</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">false</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>Disables (true) or enables (false) the tabs. Can be set when initialising (first creating) the tabs.</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>disabled</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ disabled: true });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>disabled</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var disabled = $( ".selector" ).tabs( "option", "disabled" );
+//setter
+$( ".selector" ).tabs( "option", "disabled", true );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-ajaxOptions">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-ajaxOptions">ajaxOptions</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">Options</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">null</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>Additional Ajax options to consider when loading tab content (see $.ajax).</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>ajaxOptions</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ ajaxOptions: { async: false } });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>ajaxOptions</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var ajaxOptions = $( ".selector" ).tabs( "option", "ajaxOptions" );
+//setter
+$( ".selector" ).tabs( "option", "ajaxOptions", { async: false } );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-cache">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-cache">cache</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">Boolean</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">false</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>Whether or not to cache remote tabs content, e.g. load only once or with every click. Cached content is being lazy loaded, e.g once and only once for the first click. Note that to prevent the actual Ajax requests from being cached by the browser you need to provide an extra cache: false flag to ajaxOptions.</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>cache</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ cache: true });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>cache</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var cache = $( ".selector" ).tabs( "option", "cache" );
+//setter
+$( ".selector" ).tabs( "option", "cache", true );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-collapsible">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-collapsible">collapsible</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">Boolean</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">false</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>Set to true to allow an already selected tab to become unselected again upon reselection.</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>collapsible</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ collapsible: true });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>collapsible</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var collapsible = $( ".selector" ).tabs( "option", "collapsible" );
+//setter
+$( ".selector" ).tabs( "option", "collapsible", true );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-cookie">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-cookie">cookie</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">Object</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">null</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>Store the latest selected tab in a cookie. The cookie is then used to determine the initially selected tab if the <i>selected</i> option is not defined. Requires cookie plugin. The object needs to have key/value pairs of the form the cookie plugin expects as options. Available options (example): &#123; expires: 7, path: '/', domain: 'jquery.com', secure: true &#125;. Since jQuery UI 1.7 it is also possible to define the cookie name being used via <i>name</i> property.</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>cookie</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ cookie: { expires: 30 } });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>cookie</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var cookie = $( ".selector" ).tabs( "option", "cookie" );
+//setter
+$( ".selector" ).tabs( "option", "cookie", { expires: 30 } );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-deselectable">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-deselectable">deselectable</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">Boolean</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">false</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>deprecated in jQuery UI 1.7, use collapsible.</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>deselectable</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ deselectable: true });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>deselectable</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var deselectable = $( ".selector" ).tabs( "option", "deselectable" );
+//setter
+$( ".selector" ).tabs( "option", "deselectable", true );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-disabled">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-disabled">disabled</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">Array&lt;Number&gt;</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">[]</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>An array containing the position of the tabs (zero-based index) that should be disabled on initialization.</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>disabled</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ disabled: [1, 2] });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>disabled</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var disabled = $( ".selector" ).tabs( "option", "disabled" );
+//setter
+$( ".selector" ).tabs( "option", "disabled", [1, 2] );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-event">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-event">event</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">String</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">'click'</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>The type of event to be used for selecting a tab.</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>event</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ event: 'mouseover' });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>event</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var event = $( ".selector" ).tabs( "option", "event" );
+//setter
+$( ".selector" ).tabs( "option", "event", 'mouseover' );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-fx">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-fx">fx</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">Options, Array&lt;Options&gt;</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">null</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>Enable animations for hiding and showing tab panels. The duration option can be a string representing one of the three predefined speeds ("slow", "normal", "fast") or the duration in milliseconds to run an animation (default is "normal").</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>fx</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ fx: { opacity: 'toggle' } });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>fx</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var fx = $( ".selector" ).tabs( "option", "fx" );
+//setter
+$( ".selector" ).tabs( "option", "fx", { opacity: 'toggle' } );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-idPrefix">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-idPrefix">idPrefix</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">String</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">'ui-tabs-'</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>If the remote tab, its anchor element that is, has no title attribute to generate an id from, an id/fragment identifier is created from this prefix and a unique id returned by $.data(el), for example "ui-tabs-54".</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>idPrefix</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ idPrefix: 'ui-tabs-primary' });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>idPrefix</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var idPrefix = $( ".selector" ).tabs( "option", "idPrefix" );
+//setter
+$( ".selector" ).tabs( "option", "idPrefix", 'ui-tabs-primary' );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-panelTemplate">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-panelTemplate">panelTemplate</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">String</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">'&lt;div&gt;&lt;/div&gt;'</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>HTML template from which a new tab panel is created in case of adding a tab with the add method or when creating a panel for a remote tab on the fly.</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>panelTemplate</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ panelTemplate: '&lt;li&gt;&lt;/li&gt;' });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>panelTemplate</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var panelTemplate = $( ".selector" ).tabs( "option", "panelTemplate" );
+//setter
+$( ".selector" ).tabs( "option", "panelTemplate", '&lt;li&gt;&lt;/li&gt;' );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-selected">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-selected">selected</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">Number</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">0</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>Zero-based index of the tab to be selected on initialization. To set all tabs to unselected pass -1 as value.</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>selected</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ selected: 3 });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>selected</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var selected = $( ".selector" ).tabs( "option", "selected" );
+//setter
+$( ".selector" ).tabs( "option", "selected", 3 );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-spinner">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-spinner">spinner</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">String</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">'&lt;em&gt;Loading&amp;#8230;&lt;/em&gt;'</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>The HTML content of this string is shown in a tab title while remote content is loading. Pass in empty string to deactivate that behavior. An span element must be present in the A tag of the title, for the spinner content to be visible.</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>spinner</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ spinner: 'Retrieving data...' });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>spinner</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var spinner = $( ".selector" ).tabs( "option", "spinner" );
+//setter
+$( ".selector" ).tabs( "option", "spinner", 'Retrieving data...' );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+
+<li class="option" id="option-tabTemplate">
+  <div class="option-header">
+    <h3 class="option-name"><a href="#option-tabTemplate">tabTemplate</a></h3>
+    <dl>
+      <dt class="option-type-label">Type:</dt>
+        <dd class="option-type">String</dd>
+      
+      <dt class="option-default-label">Default:</dt>
+        <dd class="option-default">'&lt;li&gt;&lt;a href&#61;"#&#123;href&#125;"&gt;&lt;span&gt;#&#123;label&#125;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;'</dd>
+      
+    </dl>
+  </div>
+  <div class="option-description">
+    <p>HTML template from which a new tab is created and added. The placeholders #&#123;href&#125; and #&#123;label&#125; are replaced with the url and tab label that are passed as arguments to the add method.</p>
+  </div>
+  <div class="option-examples">
+    <h4>Code examples</h4>
+    <dl class="option-examples-list">
+    
+<dt>
+  Initialize a tabs with the <code>tabTemplate</code> option specified.
+</dt>
+<dd>
+<pre><code>$( ".selector" ).tabs({ tabTemplate: '&lt;div&gt;&lt;a href&#61;"#&#123;href&#125;"&gt;&lt;span&gt;#&#123;label&#125;&lt;/span&gt;&lt;/a&gt;&lt;/div&gt;' });</code></pre>
+</dd>
+
+    
+<dt>
+  Get or set the <code>tabTemplate</code> option, after init.
+</dt>
+<dd>
+<pre><code>//getter
+var tabTemplate = $( ".selector" ).tabs( "option", "tabTemplate" );
+//setter
+$( ".selector" ).tabs( "option", "tabTemplate", '&lt;div&gt;&lt;a href&#61;"#&#123;href&#125;"&gt;&lt;span&gt;#&#123;label&#125;&lt;/span&gt;&lt;/a&gt;&lt;/div&gt;' );</code></pre>
+</dd>
+
+    </dl>
+  </div>
+</li>
+
+    </ul>
+  </div>
+  <div id="events">
+    <h2 class="top-header">Events</h2>
+    <ul class="events-list">
+      
+<li class="event" id="event-select">
+  <div class="event-header">
+    <h3 class="event-name"><a href="#event-select">select</a></h3>
+    <dl>
+      <dt class="even‰PNG
+
+   IHDR   2   2   )áxƒ   ´PLTE|®ÔÄÖääîì¤ÂÜôúôÜæìôöìÌâì¬Îä”¾ÜìöìÄŞìŒ¶Ôìîô¤Êäüúôäêì¼ÒäÌÚìÄÚä¬ÆäÜêìÔâìœÆÜ”ºÜìòüüşô„¶Ôäòô¤ÆÜôöü´Îäœ¾ÜìöüÌŞäŒºÔìòì¼ÖäÔæì„²ÔÄÖìäîôôúüÜæôôöôìöô¬ÊäüúüäêôÄÚìÜêôüşü¤Æä´ÒäœÂÜÌŞìŒºÜìòô¼ÖìÔæô›e   tIMEØ)*â  8IDATxœİ•í’¢<…Ç™E! Y"j”CCBğşïkƒ»³;ãş|ß®ÂJa=tŸœNç	ş9şSÈNşÈ—#»ê £èMf™Ü=†dXÂxš`ÇaG ÛviSõäğ5’	°¬—¡‡EŠÈldøÙWÈ•¯¯ãç©‡W)í“_èù„à
+ÆV~ÊÂPQp^S\Mï!İYòùesPZÒ†Ô£f«uv‰u@n6ÓS’´)Bòö:ÄiCå$¦¦—íyZ²r(E)İ[Ï¶ sƒ^GÊ÷˜c¬a,œTh™|ËwÒ$ôÛè*rL¢‹¥bå0WaŒ9ºí4ÂÛÅ¾¼‚D©L´“LE7`]1AÈu„’^qs-œıg¤”=0AI6@*H8*HÇT‘–³%¯c†?!F#DÃ£;!„p#œ ÀŞPí^.‰·ùa7ÁešCÙ¬ £FE87øœ ¦ˆeÒ0ÒÆÎäx†dùĞ¦Ê¹:\*7BnğšP•dólYr˜'ˆ"ÂÅ92opmœ¢^ª®¤8
+±TÃÙrÎBş§A!Unm4´0ÍÖToøÆ¨A.¶µÄ’/Óßßçòƒ£åáAa*hÑCoGˆ‰dH\uvìoÛí¶Ø#€“ƒ@…a¶*ÅÒXûKnÎRWh_yúèbò÷¼[©£¦öùÚ4z%¾JÃM’²v)Rut—îÇ{ıX·JÍZÕæµo .e¢S£?0úg+ß/ÌvÉçô{ËG„Rn~` à:{ÓàÚ…¦©J«	iê¶U-ÉyÓò:]‹;T¤1é7û¦j{µyQpŞå„È®ğÍF¨OwêMv¹c#Øªº§ÿvü|^°Âÿ½(A7U’¨_İG î{CRPÌ rş÷%r¤0ÃPŠ ´ÅjhQÁ.º‡8O{Ğ#ˆšÑ;2^	ÖÁ$kšSñû%AÑ%Ä£æ–¼ŸA¬úğRşé—›åP6J@tyÃÜB¼RZ5Ğú‚¹y½Nc%+ Yë#ï‘÷P~”õØ%›˜ï}7ıgîºÿeüŸŸeB²¹'%ø&    IEND®B`‚                                                                                                                                                                                                                                                                                                                                                                                                                                                             †6,    Ú1—†6,ÇëÛ7´c.ªĞâUVÃ“ ö9J	¹B‹ñkeY«Í"s0Sñ<ûxoáß#’èiy«@AÑÅ‡q×QêÕP—ô¦p‘BúÁİTÈéÛP`şø¼s+…±ç–(f†Šp“×
+äv0¡£¡VğÎí€–x´ÁE‘Ñ$b#Ò)GüQä`—1È²P¨©û æºy;¹qqƒó!¼’#°³Dı‰Œ7a‡×¼€>Àîa™å‹‘€Qı¼ü3!é!Ğ×Ï\ïeùA¥"@Şlà®ÿ«Ìv1?kù´õğ³HóË¸\!‹B76§ 'æ<NWğìI|‘•DûHH†ÔM5b9<Şƒ×gG W‡»ÙQñîRSÍ0”óÛ0“ÌZá®Eã4ğ-@?Q¢»X”Ñ´>ÀÂ=HP˜¬C:SzâÁì÷¹x×ˆ`ß±z¦ÿ¼û±l0!ÚÄ:pTUÖ¢Şô¡¡òÿú_®S€7ÿ`O’7v‘@ô®&Ê@NÈO@ÕÀDÀ¬Ä=‘G G†^T/öq2ÕÛ)9åò°ô}áä‹CaVa6's>À´/Û  ßQìŒË—|BĞØAí59Ç²A´Ûæø2îfàß†Ö°Ğî1nçqì…ğt}ŠİH³!ÚYë¹Ã ˆ6,    ø1—ˆ6,‰íÛ7ğc.ëâUœÈ“ xÅK	1¬‹ñ	’p«WÜz0•˜ü,{£á½Zğü7Æ,@ Q³øÑãÀ?¾uÙ„PYM¼öÉ~Á;ˆÅ.»;`€ûLùˆ±…¼Û{pÕ|'ó÷¡±Dº&K€˜f‹Æv‘ï`¥:Úñ	, A_Ì‹”bh%Ñ h´Æ×È£q!’¤í
+y_°õ¤]Å©<aeo¤,†‚2Àğ†¢şAšQè…«ÎÅ©Ğ™™Ø]7xA ±OØèà0 _ì¯ÏI1İ‘¹+²ğõ*Y!i„sç-‘– )ÂÄ°Fg`‡[ªß
+¦îmbš—ºû€Î^ö Ùî¿°Hkñ¸ş>Œ11	0Öì°( àÈáŒà]’8v@A(€tİ-IÑÒ[‚;ØÉPZa£õHVÁJ´’´ Î­`a˜UµÏÁ±´uğc¼óp–åŒÉy8¡ĞsW¥ef€9ÉQÅñQ‘^ÊÜ@ÉóìŠÛï])¿İ÷ú! ÉôÏ€˜‘qĞW/,¹|}°6%Æª¦‰a4.œ$-éÖÀµ&†Ù×3Q
+œDœĞZ0Ğš$yCîA%MçŠà,…Îq³d1•Íù¼¯kğ¶»Ôá!¸ÿ¯\…ì¼ Š6,    2—Š6,KïÛ7,d.fãUâÍ“ úPM	©Œñ§¾‡«á•‚0×+ôıà†.á›‘N®@"ˆšäö®Ñú¥™È3P¦Ñ|»Á™»H @›&`şB%cÔ‹±#âìÑotp@áko¿¡_Á2m]Ç€šTùÙo¦‘õ›èQâ¹Ë[#2Ú7€í`€”¡¦ ê­¡ØÕq¿0'¿Y_›°7ÛK¤ÇAaCØqPP„&Àò««ø˜³Q9#|¢1Ğ[ â^˜÷Aaå?_Òdà²p¾Õ´Ò1{š(fKÉnğ7a-æe¦!GÆ¯˜´! +LÜŸ…D}!@ŸÌWwÒõ8~ÅU¥ [Vzd‡?ÉñV+JE0æ… ­ô6áj{Ø=<¾@C;¯FÿşÑğxDd8h‘P±>”ÉÁ¨K.¯ÈÅÒ`ãn¶kâ‡±R°¦(³¬pØuWu´şÎ¡®çPkbx€;“ŞRø«-‘| 
+[È¦‹LgŸæ9f9|W±dü KÊ£Üó qnÚ‚.9°xÌª*È	üaû03_oÀ¶1ˆQ(«½ $Ğ\¼MApn³ÕêF­à“xƒÆ2–Ú1ª´ERğøùŒÊô#†!–¥BÎPi Œ6,    42—Œ6,ñÛ7hd.ÄãU(Ó“ |ÜN	!ŒñEë«kOŠ0ÉOÿ”’¹áyÈ¬%Ô_/@$¿èesÑ3Ü‹½·âPİşæ;÷$Á÷îˆ{R{`„ şÌ(±ÁZB‡dipYtF”®ë†¡=Ñ  ”C.€œBì‚ëÆÖ‘+ç×+iê‹¦"U£tK-Â—Š| l§`ejèq]Ï©¨E×°y&óê=äFa!A?t†ÀôĞ´0®ÍQW>˜š)¹Ğ§ë_Ç±vA¿ÊÎnÌàà4á¿¹Õï12Àg+ğyïBJs<K!%ìI;z« -zÔu1ø£(sçub_a¿ ‹í	S·6{¼LT İ½49^6'ñôzbí€0ZßZº¥áHSAb@ENŞ!Ø²Ñ–µ5øXPŞÊbl4!=ÁãÉ©ğ¼÷`eMÔ³ õM±ğˆpéOªep˜^Ÿƒe¡Œ[èúp¼Š€=]T+f	‘šv8uÇY*óNoJ¹³Ú= kÎÖ ÍŸcÅ V6q]Ö0¹«’°ºsMælnağÇg;9ÕÀ·ÜJFİQFº6¥xÕĞê4ÿW<èAÎ·ÄFsĞàÅ¾óxP1HŒš	^Û8ğ:8ÁÊfï!tKÕ?> 6,    R2—6,ÏòÛ7¤d.":ãUnØ“ şgP	™èŒñã¶«õ’0[f« IDáWÿ
+:¢¬°@&ö¤GÙeÑ=lªrá¦‘PŸWüˆs33ÁU"ÉVd[ü`ÉÖ6}’±_-Çõ<Y^p›¨«ògN¡áÓÊ¿C€0ßşı‘IÙo€òIO»)Ği©ùq¯€™Q î ­È3ø9qûm,b÷+°»qš1zLaÿ©˜ä‡Àöõ½Id æQui!×[AĞß-õ`ËõA°]~Æ\à¶Q}¨¾ØÂ1·ÉW¿âèğ»Ñ$g ğ!J(ûÁî5 /V\Ø`GQÁi­Û„P¿': ÕA±5Tx³C _%ï5-…ñ’0ñzË¼0œØ/Çá&±Í"FˆN@GaëB­gÑ,³È3ˆ P Â'*®°Ádze¤´`ç+òbÖ±’0,w¡p\–ØGŠü¡jÏ°¥v€?'\V^ å‘¸LfÆÉĞ~ş÷Z.8né%8± Ou­çd¸Kqªß)39C°ütpĞàaÎ”ÍF?K À¸‡ƒı1QdÉ¯©Ì’ùĞàÌLBbcOA,€²¢Ÿóà—€¶´[Æ1æ‘.qğ|v· ©X!Rñg±çfÁ 6,    p2—6,‘ôÛ7àd.€TãU´İ“ €óQ	RñDÍ«Â™0ı©Ïá56iNpù1@(-*yÊÓVÑ[¥xY–@Pa°¬oAÁ³U	2v;ç`ˆŒ¯ Ñ•±ıR4©òMSpİÜ›5ä¡ùğü…<Y€ Òzu7‘gËO²—úë¬Kz]Æ!Çv' pšú+ılq™¯3FO°ı¼Ax¶QaİÚ»®‰ÀøÇb$ Q“”ª‰„8ÉĞ¡´şaWätA{•ìÀØà8ÂÜ‘ÃÛ•1Uaïk®¢¤ğı³„é”!á‹d¬HcÀ 12ä:#]ªßğ^sA§ßÓ´½y´quª:² áŒ©â$ãñ0Aïg“©ø0ŞÑÔ0áLH¨J®–@It<½d‚ÑJĞŠV0èPb4"ã;$ÁÂŸ@«A`i
+ŒÚ±,œğn˜×p&1u’¡HCyP|p¯€AñX‘ÚÀ‘Ö"”©Å¿g’
+®€k_¨–2ß¡‹ ÑJ÷	©aqHb}5¹Ú§°>ÂX“"3Sa¬a3REÁ8À¹2¼´†Q‚Ø(® PçĞ¢¯d…lŠ¶AŠJæ şËà^~®u><1„ƒgÿğ¾´®vìÁ!0—ú"³m ’6,    2—’6,SöÛ7e.ŞnãUúâ“ S	‰»ñqä«	|¡0ß b±µZámÇb>F³@*d¯ª»ŠHÑyŞF@)…ïP#	'•ä«OÁ‰IˆÒ`
+Oˆ
+&™±›x¡\¨BHpvy`İ¡× ë88¸n€¢Åö"Ìg‘…½‹õ®ÚÓ0ôÅåQe’ÑŞl‘ü ò“GÆq7«1•øŠ°?é¾ò;Va»{§ßx‹öÀú?Ğ{Ğ§Q±¿32QĞc;cŸıóAÙz{ºTàº2<{ÈŞh1óø†z@ağ?–è À9!¿Í ]Ï×J 3lårıÔT9§ÉŸÔzølÉ¥±m2r¡1a côc·âAñÎQÛŞ«‡40 ËÙÿàDïáâæÂ-OÔŞ@K‡k†WÑÑhíL§-¨¯P$éÈ—Á ©œ™h¢f`ëè-ÁA- ±Ê¥°±Åpà¶Y`)¡&·AûÊÁ€C»ÙYÄ”œ‘ôøÁÃÄrT–]	|²"ôÎ{™f S A,í|vqæäĞ79r2°€i=¶@–ÅaŠ.™]K7ÑÀºùÜôkÛQ ç¡²tÕĞd’|Èv±Aè“LZø9à›ª|¦6!²1"ÿM¡Ïœìğ ó‘¤L/+!=”~¸ ”6,    ¬2—”6,øÛ7Xe.<‰ãU@è“ „
+U	%ñ½û«“5©0!>¾eÁåáñ£%w“4@,›4Ü¬A:Ñ—'MtPåa<è]Áo¼‰è™û¼`Œ
+atzœ±9^7=paEÛ¡¼Ü¤¡µÙën4„€¤ú·r5#˜‘£¯Ç8Æ
+¢•J³ä@QFÃ^öbÒ t”ò'ĞqÕI´ÖãŞÆ°S/Y[a™ätCêÀüdÙ”†+3QÏê¼xßñØĞ%ÂdçsA7`
+­´Ğà<£›dÍá;1‘ÅEŞğxÊ½§–Ş!İVLÕ 5êóÿ§ˆ\¹Jÿì_–Ø`ŞéË°¬o˜( å[Œ¹ŸñlbÇUÄep0bÄ®÷íX]áÀ=³Sú&@Mšša¨,†Ñ†
+ø*8wPæáYUÁ~@8”™‹`mÇKp÷?f±h¯pôì†Ip"GšK—¿¡+
+¦‡$Ô€E…˜[÷Nx‘ÏïİÃ%¥"’ŒRÿÄSu@ ÕõŠN1ß‹q„g$:¹	½°Â"Ù^ù7ahûşhQ­iÀ»ğ‡-#0Q¾ö·ÈÊÂĞ&u”Ø„AFİ²}¶$]à÷z÷(1Àz4) 2ÓğB1›"r”!ìâJáÅ –6,    Ê2—–6,×ùÛ7”e.š£ãU†í“ –V	yñ[Ê¬ï°0cÛÍpáÏÚƒ‹Úßµ@.Ò¹ø+ÑµPãqcMP§ºQ¡U$lÁÍïÉÃ«Û§`Õ9ŞÎŸ±×Ã{Ã,2p£y@% Yl¡“ Ç¥°™€¦èªîGzÈ‘Á¡|İjWz6Õ»¼:!+1Y‰§ ö†áUY7qsè6¨2Å°Ã7Lkv`awMB'ŞÀş‰â­<¯LQíFğŒÎ`ĞçHe/0òA•E™¼®Là¾ûMÒä1/(¶q|ÚğÃZ¬Ú4mƒ!{QÀÜÀ_ 7Æ{bjµ9@År X6ÉŸòu!)/Êl¿ gÃØ`ıñ
+s³ÌÜC¬0¤½ƒïúlËá¸8X o@O­É3Ê;Ñ¤'ÑH(È>P¨RAâ~ÁÜ×Ó¸°`ï¥i­R,±¹07~pd×Úì5V¡âÒP~æ€GOW]*	T‘0¥øÂØCØ­¼X°/!ß WËÔpuA¡q"êw<9¡G°¸ü|\ªaFÈdtW#À¼ç2fÚ„QÜ”»ˆ°ĞèW¬N‹ÿëA¤&lQ€àŸCy–¸æ1^ö±pÈ¹ğ„o”‘ø´ı!Êˆ²w
+r ˜6,    è2—˜6,™ûÛ7Ğe.ø½ãUÌò“ ˆ!X	ñ÷ñùö)¬§¨¸0¥xuÍØûá­âŸ¨,7@0	??¯ÑÓ‰±ô”RüPig'`zÁ+#
+Ÿ½»’`˜H#£±uéèvÉ 'på­¥¨CÕ3¡q0µQÜ,¯€¨ÖjZÑø‘ß“?¿ô2ª¹Å6(/÷à%O} x€.¹"G4q‡¹y«>°êŞ’§“eaU¶K×ÒÀ ¯ëÆò2fQAÏg:«èĞ©Ï$fwIqAó*(Ì¨Èà@„Z7×çá1Í¿Mİ—ğ=÷ÁC(!Y“Uqc5ê 9¢Å,´W6‹Ø0à”19^Y‡­çi†n é*“5gÿZñ¨ƒŸCõ!è0æ¶Xç9á|·2¾\F·@QÀøìÖïÑÂD“™%XPj¡ĞönòÁ:oo‰à‡Õ`q„‡Îbeò±¤Âğy;u»p¦gÖ ¡ì¡À›û’Øø€I_]Ã/‘N{KÂ‹âš9l£­«‘`W#ÇHõ Ù “¹£¶qÀlË>¹8Ò°F_ë›¿a$•Ê]™šÀ!½Şİ‘ÙQúÀpEĞª:Ä‘•&SApZn}£à!wyÉ1üq9A^ ğÆ­ˆÎ÷f!¨.Eéà2 š6,    3—š6,[ıÛ7f.VØãUø“ 
+­Y	iañ—#A¬1bÀ0çÑä†á‹H@´vy¸@2@Äp€fÑñÂÛ¸A«P+l|­ÆœˆÁ‰VJzÏ›}`[ë±w¦±V*p'â
+,‡Qû¡O@£©Ä€ªÄæl()‘ı…{#úÛÙ<¶±“#İÃ=ER úy{ìVfq¯%<KĞ‘z°G5†Ùã°ja3İn¡’ÆÀÔôß¨¶Q)lXßç‡pĞkV.g¿bğAQ·Û¢DàÂô¹ Üê´1kWåÊ¨·SğGpOÍ!7Õ‘"ê©t ;~‹'ïÉgue,Q>S Üñ™ÒF‘å+g} k’M
+>ö¸ñF”‹º $0(°-ß•§áZR­Calÿ@SÓ'Ø¬¤ÑàaUê"èÍP,¼ ŒìûeÁ˜„ú`ób¥}x¸±BÌ°¼bltpè÷[¿&ƒ¡†c¦˜2€KãÔ`}‘lQy,Á>\Å,¾şl %²Ï [vhµıÌq^ïA9Ğ\°ˆĞA¹"ab0‹c3À#¾Õˆ×H.Q$†ÄÄŒĞlÜÔŸMºA`¹åHÊ©Æà£Üu†:¬‰1šíçÀô†ğì–~¤:Ğ!†Ô×Z¬[Ê œ6,    $3—œ6,ÿÛ7Hf.´òãUXı“ Œ8[	áÊñ5PX¬»È0)³,
+5ğáiÈDÆ9@4wI¢qÑüMÂÜ0ZPíÄ‘3ÿØ–Áç‰ŠUá{h`”ÄÌ©±±4Ãİ4
+pip¯ÊÍÂ¡-P‘·I%Ú€¬²ƒbY‘x·E#+Â	À¦,ÿ;@U;ı' |sÈµf˜qMÄ¾x¶°‰€-  Îoaˆª’k”ºÀùıø^:™QG—áV•døĞ-İ7h|oA¯õEëœ!ÀàDe
+áí‡1	ï|wtUğ‰R1Üğq!ÎÓpÿ =ZŠ±ßÀ“I"¤u`Ol0.ÉCª"dtÌ íùßíñä¤w1&Ş_0j©×!©á8í'Ée’G@UæVª/YÑş~; x•Pîp`GâˆÙÁö¦~0v`uAÃ,ÎŠ~±àÕpÿ‰c-p*ˆœ¨öª¡|ú+QŒ€M­“bÃ7ç‘Š'§FÀñQË´ÎQ†ÊÀé';ª İK²×AháqüqrC¹gç°Ê­´d×…aà.––i…ËÀ%¿Ì3 ƒQ63ÿÈÀyĞ. ôªt!A¾L7&Öéà%)t~ûÿ18iÎHâ‰mğJ*uz}9!dzjÌw„v 6,    B3—6,ß Ü7„f.äU” Ä\	Y4ñÓ|o¬EÕÏ0kPˆéûœáG¶üÜ»@6®ÎÓbÔòÑ-5©  	P¯§¹7¥ÁE½Ê0ó[S`áœ… ­±OZ0‘êşp«JÕ2JŠ¡`j€¡ï€® vŞ‘Ö‰‘9jóˆ:3Š_9C—§j™\ğl1yı şlã~vÊqëbAîm^ò°ËËÔf\ëtaïğw¶5–®À¾²QeÂjÎBA€ĞïcAiO•îAÛÔú–#<àÆÕxóåğZ1§†$@óÌğËã3NiÇ!óX
+…÷’‰ ?6›ìsõ±-İ	˜ `­jE¡(@akûz oaÂ³ëãtñ‚µc¨>¼›0¬¢×Î.½ƒáˆ¢Nj¸@Wù…|QVÑœÙ‹]P°%ÀØMÁT5ByXmD`÷áÛƒD±~ß0B±Zæplİ‘á/°¡Znôû£æ/€OwRdöñÂ‘¨ıÔ`¿¤¾àÜz=ß¤ (ñ2*õ…„ _!üù…ÊöqšôÅE9ÿq°U™‡õèsa¾ûû¡oûcÀ'ÀÃŞH·×QTBxÍl}gĞğâ[´›ˆAL²%‚à§urv¼qu1Öä´Ğ²TğŒh™kPÀ¢!B ı=C­"  6,    `3— 6,¡Ü7Àf.p'äUä” O^	Ññq©†¬Ï×0­íã(á%íZñà_<@8åST‹äÑKnê$¸Pqv¼?pQ³Á£ğ
+<>`˜¤uït°±íD óúpí~:¶QÆQ¡éom·€°iZ¤-º‘W\/ÌQ;R!iÆ‡"Ö ÷( „'õÒ €fbFH†üq‰Ä¿¼D.°|­˜zaÍYEÚÿ—¢ÀC+ËAÌQƒíóEğĞ±êJj—®mAkÀc
+‘%¸àHFØÜêó-1E¬Ğ‘‰ğÆkö»!ÑšF6~ A#O6sÏ£oºà"ÓYş8ÿ¦]^bò) ñÈ|ˆÂÚÒñ ÆOWš×0î›¬Æ;Ññáô"ÔnŞ×@YµNs+ÃÑ:¹›Ü˜$PrÚ¾Í¢ÀÁ²Ìİs€di`yşşŠ9°
+±éğ„ØQŸp®¨{Ì´F¡8â¼¦©@B€QAf)¬‘ÆÓ{¾W]¢h*Æï÷z†!|,¯ï^ áöEÊ,q8wH¹–ü°Nü}ªLæaœÈa­uqüÀ)Áº‰n,QrQñÑÀ:UĞ²Å#¾ÂïAz•Ş.0à)Âpn}Të1t`›Xƒµ:ğÎ¦b&! Æ¯ÖÎ ¢6,    ~3—¢6,cÜ7üf.ÎAäU*” Û_	I‘ñÖ¬YHß0ïŠ?Q³á$¹¯¬½@:Ù6EBÖÑi§¸vHşfP3ÏÑÅ¨ÁÁ$Kç)`gNYÉ³±‹¥
+øUèïp/³Ÿ9•B¡Ç[Ğí™€²|\Ö¶„ê‘uNkiCã˜IxAõUõOœq¨ `¯©–.q' F‘+j°Ob#ôÔ%a«ÂşÉ™–À
+hDÅåQ¡}½úĞsqTkßÇìAÉ¥ò‹'4àÊ¶7Æïö 1ãµC}×.FğO¨÷‡ƒt`!¯Ü‚ç| Cîª±ø ÌíõiÕÜ äh;8næp]%{[YéØ s07]™Ñ0ñ¾Ö;–ox00•¾Hå_áÒ½—Ys @[ä • xÑXÖ]-(ìP4yÃ/4Ádyn¨[`ûÜ:ïÂĞ±ºò°ÇÿHXpğ8^d·9İ¡V…Q¯šT€SĞg\fz‘ä©0•½
+üdôÙN KõäQÅ.iY9 cÌ>!qÖùlJ9.‡°£bÍ1¯Xaz•Ç¸{ç”À+Â±4º%Q`jÖøBĞt¨;áÈéVAØŞ~:[Sà«of>7a1ÜàSK!ğå›XüEu!şk"!Úşz ¤6,    œ3—¤6,%Ü78g.,\äUp” ”fa	Áp‘ñ­µ¬ãç01(›>ááZ}ù>@<S^h6ùÇÑ‡à†]líPõ'çKáÉÏÁ_W‹Â(ü`œ*'Ã·±)Ëw«İäpqç½Ø¾à¡¥Iƒ$0€´jORÉÛ‘“@§R€Kâ¥ÈÌh­é³Áÿ³í} „YüÛ¥`qÅ>ÉbZ¦°‘­Ê:C„a‰+à!”›ŠÀ"]7IÿQ¿C5K×Ğ5ø]l'ákA'‹)…)°àL'—¯ôùÓ1MÛ)£Ìğ‘ŠÙ¤K!¿˜‹ğ( EÊ2»6%Úù.;ÿ`¦Æ£Ñ‚Î¨»£˜XPà‡ õ—ñ1pÈñ\ç'ˆVO0rV¶UùÍá°Xßw*h@]2ó¶Õ,Ñvó~¸³PöCß4¹¼§ÁnûiĞR³`}»:é¤Õ–±Xüp
+'@p2ÉM¢¾s¡ôÉMü´ôf€UÕi V‘€^¯¼½š&€‰×oB‚1#Ã å¡Ù`Rñ6qt|ÀL¹Å°ÒJGğOËaXb-Ä]-À-Ã¨ßòÜÕQ®oãÚhµ0Ğ6‹S$Ó¾A6(åğ•‡và-[m^ÿ×1°Whh$áğR#OÒˆŞ!Üµ’¥'' ¦6,    º3—¦6,çÜ7tg.ŠväU¶” òb	9Ú‘ñK/Ì¬m»î0sÅö¹*Éá¿‘u.KFÀ@>Šã™'°¹Ñ¥UDÜÄP·€üÑŞÁ½ŠË:Üş`!íÿ,rº±Çğä^ÁÑÙp³j@;¨¡ƒŸ76[’E€¶XBÎÛ2K‘±2ã•—SªgøOY“Ş¯Ë	iS SIp¤µ’qcİK4©÷á°ÓøqM`‰ag”­E^~À²+víÌQİn¬ø³ŸĞ÷~gmoúêA…p9+,àÎ—ö˜ùü¦1årÖnj¿ğÓl»Á!ª!k`ûIe³ G¦ºv}L~)¾ïô !!h$k—¶à"¶UG×6 wÿ«G¿ìñú÷„ 4‹0´‡+®b<áóŒd|P°@_EBÅØªáÑ”âÎH{P¸ø>ğ®IÁÌ’°cøIØ`ÿ™X˜Zè\±ö1MN7ÊptYß6C
+¡Ò=§ºNy€WŸMkÂÚ1‘ VŒÉ»p9è9`!ñé ²W3İ,î gw#ƒ–SLqÿO9]œ°ò+nu=a6/“Ï‡ÓÅÀ/ÄŸŠ+”*QÌ~\ß¼rĞømkgİ7%A”qKßñ³™à¯§kVÀüL1NÓNğôvîğ”aE¨ËG!º·GqPÓ ¨6,    Ø3—¨6,©	Ü7°g.èäUü” ˜}d	±C’ñé[ã¬÷tö0µbRm6TáÈÓB“A@@ÁhËg«ÑÃR#+´ËsPyÙXRBìÁ¾yL¼é` #°Ø–Æ½±eRwÆÎpõOÏÃ_·o¡a¯%é‘[€¸F5Jî‰{‘Ï$Ù®[r)(ÓI„ÒoZ_ãÿä( ˆL–ÓmÅÄq|Îøİ°DÈ‰}aEızi(ŸrÀ×4£P2Qû™$¦'Ğ¹qn·jAãUŸHy-¨àPV‚şÿy1½|
+ƒ:|ğOŞ*øN!I¢7û˜Ù= I‚BÙ?b×G¢åºDá*‚t¬w ÓR>Îå ùffÛ¶Jñ˜ û¸Ç0ö€ ¦o!ªálê€vø@aXq—ú–Ñ²-¤ØBPz­«¤ÖÁ**L^ Aı`xvGû"±”ñu.ƒp¶é xÈ ¡°±ŞQÀ¨‹€Yimõ”‘>,ºãº#Øª—èè1Ddşâ 5—–È éLm¥Úµaq°gQ¹ô&°V™6ŒØ¯aüøÚI^À1Å–5dKQêÕã0ĞºPƒªç^ŒAòº±ÍMà¼à1ôiNßÂ1ìN5xÅÕğÖŸ<~±!˜]Úu<y ª6,    ö3—ª6,kÜ7ìg.F«äUB"” 	f	)­’ñ‡ˆú¬.ş0÷ÿ­!Bßá{ÿ1WçßÂ@Bøíü	Ñá‹ñØº"P;2'ŞŠ~úÁyñKT^œÔ`"&s± Á±<¿Å,»Ãp7„4G£37¡?¿œÈŠp€º4(Æ á«‘í[Æc:ëWV:‰ïÆÍ&ûõ`ş 
+Fã67ÕöqŸQ×FÄY°WÀÆš“a#fHò fÀü=¨YÔKQÅ¡›Sm¯Ğ{Œzoÿ,éAA;.Xs/$àÒxµkM1[¢/¦8ğW1û·Îó!'äs¬NÈ K^Ê;x0e†Û€lf¡ìßÜÀ†PÕñO5Å” {Î °ô¬¨ñ6ìqÑğ08zÕ|5áJ)‚o…œ@@ck iUKÑĞJfph
+P<bşfšcÁˆÁçXH8"`W”öÅé±2±Òœ%<pøy`	cM7¡%§üÅ€[3Ën(Oé‘\èı¹Övl#˜qB—Ş\ê7Q £ k"·ÇwqN»S9Œ±°˜@õXª;"aòÈ^æ“¿öÀ3ÆàœÔQNèdíùĞ|3›íñ…óAP¼©àà³@hFBÂ81ŠÊ –¢»ğŞ 2TQ!vmç¢+ ¬6,    4—¬6,-Ü7(h.¤ÅäUˆ'” œ”g	¡“ñ%µ­è09	ÕMjáY6kµ,D@D/s.ûÔÑÿÄ¿øû©ÑPıŠ<dÃºÁ×$Œ/p|¿`¤(6ŠjoÄ±¡a,yâ¯¸py¸™Êæ¯ş¡ÏOÿ†€¼"B8Ü‘	—_İk­‡Ù*[»+ó¾ìÜÓ Œ?0š å(q=¹Ó¨•ª•°™ÚgU¸˜aÏ±¼¢ZÀ!GÁXeQ7ğ*J7Ğ=„pGFhAŸ ½gm1 àTéU 1ù«9ÜÑCõğ™aE¥˜!&°]¦ÂR M:RÄ‰ƒjÑFÒˆa®=E7Õnˆ3M,¼C ı5Û„Ë£ñÔ)ØèéÎ>0zsª•‰I†á(Äüô‰Âˆ@e~Ï;>* Ñîg(Á
+øÑPş^"ğuÁæXƒSp/G`…5²¥{ ¯±Ğ"qÄõp:
+¡òMÒÍ¡l™o§Ë\°€]ı‰p[	Å‘zØ¹‰.¯GúRêXºC3:j} í÷ êbzŒqì†V¹#<°ÚçÙ{È”aĞ•Äñ™5À5Ç„‹Õ¹(Q&¬Çì¸ªçĞ>³0ü¬ZA®M~ª9à5f>¥®1(Fˆf8¢ğZ")*”ƒ!T©ÿXÓÊ× ®6,    24—®6,ïÜ7dh.àäUÎ,”  i	€“ñÃá(­•¡0{:e‰Yõá7mîƒyÅ@Ffø_ì‹€Ñşß™€P¿ãQêûöÁ5XÌ
+‚\ª`&+ùbÔÃÇ±?‡™,˜¤­p»ìşM*,Æ¡ûŞï6ƒ›€¾¾%‘)ûÒ¢ôsÊo·\Æ¯‰¿n*âX© 9}ıÉôZqÛWVzäÑ°Û%œ>Õaß7ãÔ†¤NÀFPÚÅÛ~QU´Š®&¿Ğÿ™q_çAıLwg3àÖYt>	ó1—CÑˆá±ğÛõB5Ò{=!ãgì-7İ OÚ ‡£â¡NÇ8«!p›­ĞéVÀ‘,J#³ò •Y¢šdñr:Ä_­z0¼l–]ôá_wzèĞ@g‘ş`ÿ´Ñ…êˆ™PÀË½İ…}éÁDğN˜&l`ĞT13u±n,1Xë®p|šáÛ8Wd¡J8RÑ¶Â€_ÇHrÃ ‘˜®C2¸<´ğ:÷‚c=Ót|<ÅÓW oÍJ§Ü¡qŠ	bX9»Æ°¾æa®b*ıŸ«'À7È{6q}QD»@ñhÕĞ ùÊsÔÁA—ä˜ae&à·Ùd6Ä‡$1ÆÁè7ÎˆğœZ£ ×ì!2O’Êóƒ °6,    P4—°6,±Ü7 h.`úäU2”  «j	‘é“ña@­[0½×À=e€á¤L”QÆF@H}‘İBrÑ;7\ÆCˆ/P<gp43%Á“‹æ“<•`¨-¼;>Ë±İ¬àM™¢pı dÑm¨¡Ùîİ´lÿ°€Àş :8æ<‘Gíæ|’1çßú1¤ç‹BØÔ~ 2Ê`“qyöØK3w°q¶âzò¢a½ °øP¦BÀkYó{_˜QsF=\GĞÁ —r×xfA[ëÚ†a5˜àXÊÓ'Æ15Ûh5inğØ$R_Râ!Á©(À³«g QòacI¹;¿2½ÒÍá2ùjş>øï™IGª¡ P.y‘ÂñK°Ö‹¶0şeT…£qbáäùñÿ’@i¤-àÔiÑ*¢¬baP‚€™{
+]Á¢‡ºHÀ‘`‰òíçE;±6ñšgp¾*"Å#Üú¡( ıÖÕ€a‘tÁ}|‘¶„qL·ïR²Æ¦tMv¤Å>=2 ñ¢”.ë>·q(ŒµZ¹RQ°^6£ÁeyaŒ/¦!ÀÀ9ÉráF(ÒQbÊ¹õ`%ÃĞÂÛâ¶û(AjàJ‡½‘Ià9&c.…jš1d=Ï—doğŞ˜$ÖV!õ$<j0 ²6,    n4—²6,sÜ7Üh.¾åUZ7” "7l		S”ñÿ:W­©0ÿtñpáóÚª¨È@JÔÃÎùcÑYp*­gwŞPC•|ölo3Áñ¾LÁ¥€`*0¨lÎ±{Òs“—p?UÉT±$U¡·şËg£{Æ€ÂìóµJ=m‘eßJ)#„Zócüt˜EXÎYÎPT ,Ä\¿q•[‚]I°_¼])·¨a›	~¨6Àb2ã±Q‘qÆy	àÎĞƒ§ s’åA¹Ği–[7àÚ:3™1Ór â4+ğ_ºoì(‡!Ÿëdq: ò SÎéÅÏ”İ³˜ğ¡ôV~'0MgD¡P ƒl
+Pˆ ñ®[œM3iò0@_)}°…ĞáÂ”l…—4a@k·\²£©ÑH¿n³¨(PD5}Tq—ĞÁ VCè¶`Ñ³œX±ª?±İ9 p »b®a‘¡õÈ§Üjç€c[Æuô7X‘ÔZŸf¶¢ñtRV”„ãÇÔÔA9§ sxŞP/¡ÌqÆ	]9êÛ° İ‡ä"Èëajüõ¬—XÀ;ÊiŒß&Q€Ù2ú´â°Ğ„¾úù"AÈ)±u¾là»ra&FM1¹µØùUğ ×¥¬\¿!îš·­5EÜ ´6,    Œ4—´6,5Ü7i./åU <” ¤Âm	¼”ñgn­3Î$0Ax¥|–áÑ	½í_I@Lˆô¿°UÑw©ø“‹fPî‘|¥«AÁOòŒœ·üj`¬2BíÁÑ±øàF¹‚Œp‰.Øô ¡•ºÚ÷Û€ÄÚæ1]”‘ƒÑ†l:Œ"µFæìï£$~qÄÌ) ”%d'&$ñqµ3ŞîĞC…°¡pó,­ayrK@å©*Àµk%èfËQ¯œOñ¶¼VĞE.ªtg«dA¶ø¥U9à\«’úl1q
+˜ »çğ¡œè‹yÿ+!}-¡"Á”| Uªq(Îäíûú¨^ib¶´æœ'h«–„A˜ÿ ÔÄ×&~ñLlˆÄKG.0‚Xşt½™>á /ç
+œZ©@mÊ‹„Å~ÓÑfÜ0 8ğPêÜg$DÁ^¶ñ=Û`¯)bRkÇ±HIq aùØpBK£—ùå'¡äh‘RâÄù€e%…w'ò3‘ò0Í€µU6Ş•6B2XCóç õM(ssâqd‘\_¹f°â„lA+^aHÉ[²ñÀ=Ë`7¸–{Qè«ş ĞF¡=%I÷A&sduêà=¿_0†1 4œ§¨<ğb'‚Ÿ(!Ì@Jnˆ ¶6,    ª4—¶6,÷Ü7Ti.zIåUæA” &No	ù%•ñ;”…­½‡,0ƒ¯ÓYˆ!á¯HgÑ»¬Ê@NB&±gGÑ•âÆz¯U<PÇF§ŞçOÁ­%ÍwÉÜU`.5Æ{Õ±·NúnwpÃ½“[8ä¡s¨Ítñ€ÆÈÙ­oëÍ‘¡ÃÂ¯Q”êwviİjtñ-‰ºHÿ ±Šï3#qSÒ`À*Á°ãR¬¶/J²aWÛd¯«ÀÚt>êäQÍÇØhd™ŞĞµ³u¯ÄãAu›‡µO;àŞòã ?1¢/;ÌX¤ğã~Ê¨ÖĞ![oİÓG	 W†ùŠúFß$Ï4"xO6<÷Ÿ	¢>ÿ® ‡;¬ıuÜñê|t;d%j0ÄQÓlÊ­¬á~Êa €ñ@oİºVçSˆÑ„ùòTıÇ·PÈ<Ë\±·Á¼M88 `G~±æR1cˆğ‘p„Ûã€äj¾¡ÂÜYıç€gïCyZ¬‘ûš´/øiµ¥¥‰¼5¡E­zÁ w#r•·e÷q°a9ñ°$,Q*_Ğa&–Á*¸ƒ‰À?ÌWâğMĞQ¼÷$]]ŒĞ„*€/p^A„¼}RÑ³à¿^Èü1>°‚/y%#ğ¤S¨ùWâ‘!ªæÜÌ–4 ¸6,    È4—¸6,¹Ü7i.ØcåU,G” ¨Ùp	q•ñÙÀœ­GA40ÅL/”¬áÅå‰ùK@Py’W¢9Ñ³•aÓDëP‰Ÿ¼ˆ$^ÁYSÛ¼@`°7ÈåiØ±UC»­$lvpòøŞ{™«¡Q.–€Gğ€È¶Ì)‚Bş‘¿µşòhœ²9¦ìÍåßu_½İ °ÄÔ ˜şí¸CUqñpã‘nı°%Sıkg·a5Dæ‡y­À ÿ}WTnşQëòaàvfĞÉ;½v÷İbAÓ€ÅI=ˆà`ŒQÍ%1­9Çç—ö`ğ%a¬Å“¬u!9±…Î}‘ YbíR 7Ã”ê4Wâ:p·ÏPß×g“¿;ö…] 	£9Ôl:ñˆ`²|¦0K¨d×Áá\eÜ¥¦9@qğé(	)=Ñ¢µ¥úWPŠSœ†R>+Áå(3`ú$`‘leÀ½S±„\ñ¥¯çJpÆk$jÏïT¡ P"¨íx€i¹{fë‘.İ(µ³»Íºõd.¶Ü6îeêGgä› ùø»·ûÇq –d¹°{°fÓ5M}ñBac'6¾ù!ÀAÍN)%QÚ±zĞÊfBÃ9—ÅAâä@-CÖàAX\‰õq1Ü+i·I»	ğæ‘)ğ-%û!ˆŒo˜¿à º6,    æ4—º6,{Ü7Ìi.6~åUrL” *er	éø•ñwí³­Ñú;0êŠÁŸ7ák¶#úWFÍ@R°‰“Õ*ÑÑTcH÷3šPKøÑO`lÁiŒM.íœ+`2:‹wO¾Û±óh(aÚ`kpG&^b¿s¡/>„3~l€Ê¤¿¥”™.‘İ§:6€¤zûÕo¾`Kj½‰¸¦@ª KQ‚S‡qfc½ö8°géúC¨„¼a­³«C¯À"$‡p
+òQ	ëW¿RîĞ‹ÂÆw?÷áA1f¥ÔC?àâü°¶*å1KÑ^”c”ğgCâ ƒ!óU6Uò [>	P&ùU§Š°šy¢üÍieÇÅİ8í| ‹
+ôU«c˜ñ&L)•áá0HD}\äÕˆá: W›©Ì@sû*şñÑÀ3wö÷çFPLüAHËÁx|Ä-ˆñI`Kƒos£±"f±èÖŞpüdSºtë¡~ÄêRóÒ0€kƒÁ|À Ç‘L³VÏ²nl|·Æ/±L–3J!Nv {ÎÚ?*"q>Wf9H°¨zp›Tµaâ/AÄoºÀCÎE8b¼yQøØgĞŒIZD¾,A@OJ/‰oùàÃ¤ZJØç1z§O?Qğğ(Ğªæhd!f2tcèŒ ¼6,    5—¼6,=Ü7j.”˜åU¸Q” ¬ğs	ab–ñË­[´C0I‡æu«ÂáIí&“N@Tçœº„ŒÑï1/#IPQç”‡œzÁÇ¿	ÿ|`´<NP¹ß±‘•U`p‰ZÃå’:¡Nræ´è1€Ì’²!§ğ^‘û™vy—¬B½ó®Û¶^V=Ğœ¼ œ˜´Kc¹q-®è4İt°©4¢Šä¡ÁañÏ±úÀ$I‰Àu1Q'ItÏl/vĞMIĞx‡aAK4ä=A€àdm /¸1éhö@/2Úğ©%pÿ­Y¿!õ4’çÛf¦ ]‘²×;Rs‹€v œb¾+ˆz¯G#ú5äs» r®*‚ZöñÄ®8 ­¿0Š=RTñéöá›Ñ ®òÉ@uHÍLÓ¦ÑŞP9GõwP½[ı=XÁÖ`(°èn`•)¡)¶ß±Àoq+şÕ¼pJŒ¥<¥ù¡\8³ıø,C€mM€~óÚ¢‘j‰„é±!>Ä?×‚+ªÆ|LÛ·P ı£OüƒŒ7qÜ›ªh¹ß°ê!ÿ’¹·'aÀüòLÊåRÀEÏ<ãšsÎQ%Y•UĞN,rINå“A˜°å›àEñXş
+»]1#6ÇêæÖğj,İÙªÍ!DØ”å.9 ¾6,    "5—¾6,ÿÜ7Dj.ò²åUşV” .|u	ÙË–ñ³Fâ­åmK0‹$B!)·Má'$à"ôßÏ@V"ìuCÑÇÿ?øPÏ©üÀØˆÁ%óÍä]`6?)#gâ±/´ÈEJUpË(iF¡ë]`™ëdG€Î€¥¹G‘Œ²¼®´
+5vŸV"Sy"íç’8U åsëqËLk[Ã°°ëIÑ ¿ÆaÏ~Nó×²îÀ&n™¢vùJQEtıFşĞĞÙyÏ)àAí0Ãó7Cüàæİo‰4!‹1‡ íúÏ–ğëR;0d!ÓvÎ˜bÛ0 _öšQ«‘ov<f¾"€‰ğ›—3Ûjj ÙhÿXQTñb¿$ÆY0Ì6'Lşıdáö5L¦²@w)wŸn¨[Ñümû—òÖPĞq»¸3å…Á4«û"Øß“`¿ÍŞÈ¥±^y1n%ÍupŒæ%~¡:¬{¨ş†U€o?€&•~‘ˆ_²±Ô© ™sÈçÕ¥÷ÅN•!+ y™ÈîLqzşj9w°,Éãµ×šaÉXXĞ[ëÀGĞ3Ó*#Q44	­RCĞŠŒXûAüáAÈ?àÇ=WöËÓ1¶O»|½ğ¬L­Ó¯í6!"~'Wú9å À6,    @5—À6,ÁÜ7€j.PÍåUD\” °w	Q5—ñQsù­o'S0ÍÁ"İÂØá[>7Â,Q@XU§gúÿÑ+ Îüb§P‘¡ø—Áƒ&À"=ì`¸AÔ»å±ÍÙo{û>JpÃì‰ŠÉ¡ÉmNL"á\€Ğn˜Ì¿‘7~îÿÅ¼ÒAeùÑG×îœÿˆ´*  ş1{Ş‚qiëí×©©ì°-Ëğ]ÜËa­ç¢´âÀ(“¢»,}dQcŸ†¾Çè…ĞÑVãzC_AKR2ExàhNÏr9$^1%˜%šÆmSğ-ê39È	!±¸
+JéO» aÒ w\g¯SlÌàâBçX5£·ßŒ50Òa A#Ô/H²ñ ĞŞ{•00üCÓáÔĞÆ+·>Z@y<¦q}Ñ‹½èï—P’&t)rùÁ’B— ×¸`™æÜ|”Ûk±ü‚ñ°LÄ.pÎ¬&{¯¡ DSág€qáıYOZ‘¦5à°‡HÂ$#Qø( f'QO‹ Oã@Qbq¡Qm¹¦°npÈØõ}a|–¾cÖÑƒÀIÑ*9âwQRC‚1ĞÒñ¡Ïb3bAZ+}úœôbàIŠUîŒ€I1T×‹¤ğîŠ.Ê…0 ! $ºÈÅb‘ Â6,    ^5—Â6,ƒ Ü7¼j.®çåUŠa” 2“x	É—ñïŸ®ùàZ0_ù#‘Îcáã‘œKyÒ@ZŒ,OX±ñÑI9œã†ğUPS[''1Q¥ÁáYN›4×`:D—Úöé±kÿÜ.±3?pO÷òoÍ‘¡§}<ÿX]r€Ò\‹•Şõï‘Up*CİÄš•|€Lù;5»L0  "ø~Ş§’OqŠp©ø(°o˜^™ùĞa‹Pé:l¶ÖÀ*¸«Ôâ ~QÊ6uÅĞ“İì{_\ŞA©ûà,Gôàê¾.\>'11Ã/½F’ğoÌVUİ­!úFûoÄE c®(Ú}]Í7bÈ1£EÁÎ·gï=S-ÉXÈ “¨İ¨?ñàü÷YÑ0P)Ñ;&Aá²kA±»d¢@{OÕC²RÅÑ8¨9í'ePTÛz/ÿlÁğÙ2(Îİ`Åú+Jî1±šŒ±ós»çp=gøeˆE¡ö“ş	;z€s«¼ƒŒ	6‘Ä8¯:ç„°ÒÙ|šÄWXS	õß ƒ$-cP³wq¶#¥o9¦0°°­ûá~aZc$oÜGÀKÒ!äD™ÌQpRûUÍĞ”Ô¹mZÉA¸tãèø †àËÖSæMc¿1ò•é^\¨Šğ0É¯À[s	!ŞÉL:‘‹= Ä6,    |5—Ä6,E"Ü7øj.æUĞf” ´z	A˜ñÌ'®ƒšb0QüT%EÚîáÁÈú_^ÆS@\Ã±€IhãÑgrjÊªßP´<­i³Á?vFıÁ`¼FZ³`dì±	%Jâf(4p‘+XóƒX¡…*²Ù‡€ÔJ~ñL ‘sbf†ôÌbÅÄÿpÇd0“‡ü.u¬Õ ¤ñËAq¢q¥(ózGvd°±a?¥ÕÖai¹¶^6¸ÊÀ,İ´í˜„—QŸõ˜­"¢•ĞUdö|§u]Aáo"&Ipàl/EC*1aÇTó]©Ìğ±®÷râ³R!m<ƒ¬ö8Ğ eŠ°<á’¶ëX—%cÆ¢)hÌO'›‰p*ÀOw ˜}İ5nñ<ñè{80’"¦3%:¯á¼6ÀŠê@}bÔ'zÑVÅAŠê
